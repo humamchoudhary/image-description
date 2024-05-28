@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-8">
+        <h1 class="text-4xl mb-8">Upload or Capture Image</h1>
+        <form action="/" method="post" enctype="multipart/form-data" class="space-y-4">
+            <input type="file" name="file" accept="image/*" capture="environment" class="block w-full text-gray-300" />
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Upload or Capture Image
+            </button>
+        </form>
+    </div>
+</body>
+
+</html>

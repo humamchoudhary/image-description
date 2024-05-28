@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-8">
+        <h1 class="text-4xl mb-8">Prediction Result</h1>
+        <div class="mb-8">
+            <img src="http://127.0.0.1:8000/{{ image_url }}" alt="Uploaded Image" class="w-full max-w-md mx-auto">
+        </div>
+        <div class="text-2xl">
+            <p>{{ prediction }}</p>
+        </div>
+        <a href="/" class="mt-8 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Upload Another Image
+        </a>
+    </div>
+</body>
+
+</html>
