@@ -6,7 +6,7 @@ from torchtext import vocab as voc
 df_caption = pd.read_csv("./dataset/csv/dataset_cleaned.csv")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-df_caption = df_caption
+df_caption = df_caption[:10000]
 en_nlp = spacy.load("en_core_web_sm")
 
 

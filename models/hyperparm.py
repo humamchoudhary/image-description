@@ -8,13 +8,12 @@ sys.path.insert(0, parent_dir)
 from models.const import *
 
 n_epochs = 5
-batch_size = 32
+batch_size = 16
 output_dim = len(vocab)
 embedding_dim = 256
 encoder_dim = 512
-decoder_dim = 512
-attention_dim = 512 * 3
-decoder_dropout = 0.2
-
-
-teacher_forcing_ratio = 0.2
+decoder_dim = 1024
+attention_dim = 1024
+decoder_dropout = 0.20
+clip = 1.0
+teacher_forcing_ratio = 0.3
