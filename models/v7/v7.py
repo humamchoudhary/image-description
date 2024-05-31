@@ -1,4 +1,5 @@
-# Model 4
+# Model 7
+
 import os
 import sys
 
@@ -12,8 +13,9 @@ import random
 from const import *
 from hyperparm import *
 import torch.optim as optim
-from torchvision import models
 
+# from torchvision import models
+from torch.optim import Adam
 from torchvision.models import resnet18, ResNet18_Weights
 
 
@@ -22,8 +24,8 @@ class Encoder(nn.Module):
         super().__init__()
         resnet = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
 
-        for param in resnet.parameters():
-            param.requires_grad_(False)
+        # for param in resnet.parameters():
+        #     param.requires_grad_(False)
 
         modules = list(resnet.children())[:-2]
         self.resnet = nn.Sequential(*modules)
@@ -151,9 +153,10 @@ decoder = Decoder(
 
 model = Seq2Seq(encoder, decoder, device).to(device)
 
-optimizer = optim.Adam(model.parameters())
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 criterion = nn.CrossEntropyLoss(ignore_index=pad_index)
 # criterion = nn.MSELoss(reduction="mean")
+
 
 if __name__ == "__main__":
     print("Model Architecture:\n")

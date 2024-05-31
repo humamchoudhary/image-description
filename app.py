@@ -14,7 +14,7 @@ import numpy as np
 import torch
 from models.const import *
 from models.hyperparm import *
-from models.v8.v8 import model
+from models.v7.v7 import model
 
 print(device)
 app = Flask(__name__)
@@ -22,8 +22,7 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-checkpoint_path = "model-v8-2-full.pth"
-
+checkpoint_path = "./model-v7-5.pth"
 # Load the checkpoint
 checkpoint = torch.load(checkpoint_path)
 
@@ -32,44 +31,44 @@ model.load_state_dict(checkpoint["model_state_dict"])
 from PIL import Image
 
 
-# def generate_caption(img, max_output_length=15):
-#     global vocab
-#     model.eval()
-#     with torch.no_grad():
-#         img = img.unsqueeze(0).to(device)
-#         encoder_outputs, hidden = model.encoder(img)
-#         inputs = [vocab.lookup_indices([sos_token])[0]]
-#         for _ in range(max_output_length):
-#             inputs_tensor = torch.LongTensor([inputs[-1]]).to(device)
-#             output, hidden = model.decoder(inputs_tensor, encoder_outputs, hidden)
-#             predicted_token = output.argmax(-1).item()
-#             inputs.append(predicted_token)
-#             if predicted_token == vocab.lookup_indices([eos_token])[0]:
-#                 break
-#         tokens = vocab.lookup_tokens(inputs)
-#     return tokens
-
-
-# For transformers
 def generate_caption(img, max_output_length=15):
     global vocab
     model.eval()
     with torch.no_grad():
         img = img.unsqueeze(0).to(device)
-        encoder_outputs = model.encoder(img)
+        encoder_outputs, hidden = model.encoder(img)
         inputs = [vocab.lookup_indices([sos_token])[0]]
         for _ in range(max_output_length):
             inputs_tensor = torch.LongTensor([inputs[-1]]).to(device)
-
-            output = model.decoder(
-                inputs_tensor.unsqueeze(0), encoder_outputs.permute(1, 0, 2)
-            )
+            output, hidden = model.decoder(inputs_tensor, encoder_outputs, hidden)
             predicted_token = output.argmax(-1).item()
             inputs.append(predicted_token)
             if predicted_token == vocab.lookup_indices([eos_token])[0]:
                 break
         tokens = vocab.lookup_tokens(inputs)
     return tokens
+
+
+# # For transformers
+# def generate_caption(img, max_output_length=15):
+#     global vocab
+#     model.eval()
+#     with torch.no_grad():
+#         img = img.unsqueeze(0).to(device)
+#         encoder_outputs = model.encoder(img)
+#         inputs = [vocab.lookup_indices([sos_token])[0]]
+#         for _ in range(max_output_length):
+#             inputs_tensor = torch.LongTensor([inputs[-1]]).to(device)
+
+#             output = model.decoder(
+#                 inputs_tensor.unsqueeze(0), encoder_outputs.permute(1, 0, 2)
+#             )
+#             predicted_token = output.argmax(-1).item()
+#             inputs.append(predicted_token)
+#             if predicted_token == vocab.lookup_indices([eos_token])[0]:
+#                 break
+#         tokens = vocab.lookup_tokens(inputs)
+#     return tokens
 
 
 def tokens_to_sentence(tokens):

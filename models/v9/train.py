@@ -1,21 +1,21 @@
 import os
 import sys
-
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-print(parent_dir)
 sys.path.insert(0, parent_dir)
-import torch
-import numpy as np
 from const import *
 from hyperparm import *
-import tqdm
+import torch
+import numpy as np
 from matplotlib import pyplot as plt
-from v7 import model, criterion, optimizer
-from dataloader import cap_train_dl, cap_val_dl
+import tqdm
 import gc
 import multiprocessing as mp
 
-# from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+# Adjust import paths as needed
+from v9 import model, criterion, optimizer
+from dataloader import cap_train_dl, cap_val_dl
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def calculate_accuracy(output, target):
@@ -26,52 +26,41 @@ def calculate_accuracy(output, target):
     return correct / total
 
 
-def train_val_fn(
-    model,
-    train_loader,
-    val_loader,
-    optimizer,
-    criterion,
-    teacher_forcing_ratio,
-    device,
-):
-    # print("train")
+def train_val_fn(model, train_loader, val_loader, optimizer, criterion, device):
     model.train()
     epoch_loss = 0
-    epoch_bleu = 0
+    epoch_acc = 0
 
-    # for epoch in tqdm.tqdm(range(n_epochs)):
     for batch in tqdm.tqdm(train_loader, total=len(train_loader)):
-        # print(i)
         imgs, trg = batch
         imgs, trg = imgs.to(device, non_blocking=True), trg.to(
             device, non_blocking=True
         )
 
         optimizer.zero_grad()
-        output = model(imgs, trg, teacher_forcing_ratio)
+        output = model(imgs, trg)
         output_dim = output.shape[-1]
-        output = output[1:].view(-1, output_dim)
-        trg = trg[1:].view(-1)
+        output = output.view(-1, output_dim)
+        trg = trg.view(-1)
         loss = criterion(output, trg)
         loss.backward()
         optimizer.step()
         epoch_loss += loss.item()
-        epoch_bleu += calculate_accuracy(output, trg)
+        epoch_acc += calculate_accuracy(output, trg)
 
         del imgs, trg, output, loss
         torch.cuda.empty_cache()
         gc.collect()
 
     train_loss = epoch_loss / len(train_loader)
-    train_bleu = epoch_bleu / len(train_loader)
+    train_acc = epoch_acc / len(train_loader)
     print(
-        f"\tTrain Loss: {train_loss:7.3f} | Train PPL: {np.exp(train_loss):7.3f} | Train Acc: {train_bleu:.2f}"
+        f"\tTrain Loss: {train_loss:7.3f} | Train PPL: {np.exp(train_loss):7.3f} | Train Acc: {train_acc:.2f}"
     )
 
     model.eval()
     val_loss = 0
-    val_bleu = 0
+    val_acc = 0
     with torch.no_grad():
         for batch in val_loader:
             imgs, trg = batch
@@ -79,23 +68,24 @@ def train_val_fn(
                 device, non_blocking=True
             )
 
-            output = model(imgs, trg, 0.0)  # Turn off teacher forcing for validation
+            output = model(imgs, trg)
             output_dim = output.shape[-1]
-            output = output[1:].view(-1, output_dim)
-            trg = trg[1:].view(-1)
+            output = output.view(-1, output_dim)
+            trg = trg.view(-1)
             loss = criterion(output, trg)
             val_loss += loss.item()
-            val_bleu += calculate_accuracy(output, trg)
+            val_acc += calculate_accuracy(output, trg)
+
             del imgs, trg, output, loss
             torch.cuda.empty_cache()
             gc.collect()
 
     val_loss = val_loss / len(val_loader)
-    val_bleu = val_bleu / len(val_loader)
+    val_acc = val_acc / len(val_loader)
     print(
-        f"\tVal Loss: {val_loss:7.3f} | Val PPL: {np.exp(val_loss):7.3f} | Val Acc: {val_bleu:.2f}"
+        f"\tVal Loss: {val_loss:7.3f} | Val PPL: {np.exp(val_loss):7.3f} | Val Acc: {val_acc:.2f}"
     )
-    return train_loss, val_loss, train_bleu, val_bleu
+    return train_loss, val_loss, train_acc, val_acc
 
 
 mp.set_start_method("fork", force=True)
@@ -111,46 +101,37 @@ def save_model(model, optimizer, path):
     )
 
 
-def train(
-    model,
-    train_dl,
-    val_dl,
-    optim,
-    crit,
-    model_path,
-    checkpoint_path=None,
-    load_model=False,
-):
+def train(model, train_dl, val_dl, optim, crit, model_path, n_epochs=10):
     best_val_loss = float("inf")
     train_losses = []
     val_losses = []
-    train_bleus = []
-    val_bleus = []
-    if load_model:
-        checkpoint = torch.load(checkpoint_path)
-        model.load_state_dict(checkpoint["model_state_dict"])
+    train_accs = []
+    val_accs = []
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, "min", patience=2, factor=0.5
+    )
 
     for epoch in tqdm.tqdm(range(n_epochs)):
-        train_loss, val_loss, train_bleu, val_bleu = train_val_fn(
+        train_loss, val_loss, train_acc, val_acc = train_val_fn(
             model,
             train_dl,
             val_dl,
             optim,
             crit,
-            teacher_forcing_ratio,
             device,
         )
         train_losses.append(train_loss)
         val_losses.append(val_loss)
-        train_bleus.append(train_bleu)
-        val_bleus.append(val_bleu)
+        train_accs.append(train_acc)
+        val_accs.append(val_acc)
         print(
-            f"Epoch: {epoch+1} | Train Loss: {train_loss:7.3f} | Train PPL: {np.exp(train_loss):7.3f} | Train Acc: {train_bleu:.2f} "
-            f"| Val Loss: {val_loss:7.3f} | Val PPL: {np.exp(val_loss):7.3f} | Val Acc: {val_bleu:.2f}"
+            f"Epoch: {epoch+1} | Train Loss: {train_loss:7.3f} | Train PPL: {np.exp(train_loss):7.3f} | Train Acc: {train_acc:.2f} "
+            f"| Val Loss: {val_loss:7.3f} | Val PPL: {np.exp(val_loss):7.3f} | Val Acc: {val_acc:.2f}"
         )
+        scheduler.step(val_loss)
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            save_model(model, crit, model_path)
+            save_model(model, optim, model_path)
 
         torch.cuda.empty_cache()
         gc.collect()
@@ -166,26 +147,17 @@ def train(
         plt.savefig("model-v7-4-t-v-loss.png")
 
         plt.figure(figsize=(10, 6))
-        plt.plot(train_bleus, label="Train Acc")
-        plt.plot(val_bleus, label="Validation BLEU")
+        plt.plot(train_accs, label="Train Acc")
+        plt.plot(val_accs, label="Validation Acc")
         plt.xlabel("Epoch")
-        plt.ylabel("BLEU Score")
-        plt.title("Training and Validation BLEU Score")
+        plt.ylabel("Accuracy")
+        plt.title("Training and Validation Accuracy")
         plt.legend()
         plt.show()
-
-        plt.savefig("model-v7-5-t-v-accu.png")
-    save_model(model, optimizer, "./model-v7-5-full.pth")
+        plt.savefig("model-v9-t-v-accu.png")
+    save_model(model, optim, "./model-v9-full.pth")
 
 
 if __name__ == "__main__":
-    train(
-        model,
-        cap_train_dl,
-        cap_val_dl,
-        optimizer,
-        criterion,
-        "./model-v7-5.pth",
-        # "./model-v7-2.pth",
-        # True,
-    )
+    model = model.to(device)
+    train(model, cap_train_dl, cap_val_dl, optimizer, criterion, "./model-v9.pth")

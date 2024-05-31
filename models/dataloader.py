@@ -1,3 +1,9 @@
+import os
+import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+print(parent_dir)
+sys.path.insert(0, parent_dir)
 from const import *
 from hyperparm import *
 import torch
@@ -9,7 +15,7 @@ import requests
 from io import BytesIO
 import torchvision.transforms as transforms
 
-no_workers = 64
+no_workers = 8
 
 
 class CaptionDataset(Dataset):
@@ -47,10 +53,31 @@ class CaptionDataset(Dataset):
         return images, caption
 
 
+# transform = transforms.Compose(
+#     [
+#         transforms.Resize((224, 224)),
+#         transforms.ToTensor(),
+#     ]
+# )
 transform = transforms.Compose(
     [
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
+        transforms.RandomApply(
+            [transforms.RandomRotation(30)], p=0.3
+        ),  # Apply rotation with a probability of 0.5
+        transforms.RandomApply(
+            [transforms.RandomHorizontalFlip()], p=0.3
+        ),  # Apply horizontal flip with a probability of 0.5
+        transforms.RandomApply(
+            [
+                transforms.ColorJitter(
+                    brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2
+                )
+            ],
+            p=0.3,
+        ),  # Apply color jitter with a probability of 0.5
+        transforms.Resize((224, 224)),  # Randomly crop the image to 224x224 pixels
+        transforms.ToTensor(),  # Convert the image to a tensor
+        # Normalize the image with mean and std of ImageNet
     ]
 )
 

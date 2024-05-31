@@ -5,7 +5,6 @@ from torchtext import vocab as voc
 
 df_caption = pd.read_csv("./dataset/csv/dataset_cleaned.csv")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-df_caption = df_caption
 
 en_nlp = spacy.load("en_core_web_sm")
 
@@ -45,7 +44,6 @@ pad_index = vocab[pad_token]
 
 vocab.set_default_index(unk_index)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(len(vocab))
 
 
 def numericalize_str(example):
@@ -54,5 +52,6 @@ def numericalize_str(example):
 
 
 df_caption["text"] = df_caption["text"].apply(numericalize_str)
+df_caption = df_caption[:1000]
 
 no_worker = 64
