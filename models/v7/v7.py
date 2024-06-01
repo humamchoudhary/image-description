@@ -153,7 +153,7 @@ decoder = Decoder(
 
 model = Seq2Seq(encoder, decoder, device).to(device)
 
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(model.parameters(), lr=0.1)
 criterion = nn.CrossEntropyLoss(ignore_index=pad_index)
 # criterion = nn.MSELoss(reduction="mean")
 

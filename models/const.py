@@ -5,9 +5,9 @@ from torchtext import vocab as voc
 
 df_caption = pd.read_csv("./dataset/csv/dataset_cleaned.csv")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-df_caption = df_caption
+df_caption = df_caption[:10000]
 
-en_nlp = spacy.load("en_core_web_sm")
+en_nlp = spacy.load("en_core_web_md")
 
 
 def tokenize_comment(example):
@@ -20,7 +20,7 @@ def tokenize_comment(example):
 df_caption["text"] = df_caption["text"].apply(tokenize_comment)
 
 
-min_freq = 2
+min_freq = 1
 
 unk_token = "<unk>"
 pad_token = "<pad>"

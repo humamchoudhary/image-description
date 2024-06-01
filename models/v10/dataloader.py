@@ -1,9 +1,9 @@
-# import os
-# import sys
+import os
+import sys
 
-# parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# print(parent_dir)
-# sys.path.insert(0, parent_dir)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+print(parent_dir)
+sys.path.insert(0, parent_dir)
 from const import *
 from hyperparm import *
 import torch
@@ -14,6 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 import requests
 from io import BytesIO
 import torchvision.transforms as transforms
+from transformers import BertTokenizer
 
 no_workers = 8
 
@@ -32,8 +33,6 @@ class CaptionDataset(Dataset):
         row = self.df.iloc[idx]
         image_path = row["image_path"]
         caption = row["text"]
-        caption = torch.tensor(caption)
-        # print(idx, end=" ")
 
         if image_path.startswith("http"):
             response = requests.get(image_path)
@@ -43,30 +42,32 @@ class CaptionDataset(Dataset):
 
         if self.transform:
             image = self.transform(image)
-        # print(image)
-        return image, caption
+
+        # Tokenize the caption
+        tokenized_caption = self.tokenizer(
+            caption,
+            return_tensors="pt",
+            padding="max_length",
+            truncation=True,
+            max_length=30,
+        )["input_ids"].squeeze(0)
+
+        return image, tokenized_caption
 
     def collate_fn(self, batch):
-        images, caption = zip(*batch)
-        caption = nn.utils.rnn.pad_sequence(caption, padding_value=pad_index)
+        images, captions = zip(*batch)
+        captions = nn.utils.rnn.pad_sequence(
+            captions, batch_first=True, padding_value=self.tokenizer.pad_token_id
+        )
         images = torch.stack(images)
-        return images, caption
+        return images, captions
 
 
-# transform = transforms.Compose(
-#     [
-#         transforms.Resize((224, 224)),
-#         transforms.ToTensor(),
-#     ]
-# )
+# Define transformations
 transform = transforms.Compose(
     [
-        transforms.RandomApply(
-            [transforms.RandomRotation(30)], p=0.3
-        ),  # Apply rotation with a probability of 0.5
-        transforms.RandomApply(
-            [transforms.RandomHorizontalFlip()], p=0.3
-        ),  # Apply horizontal flip with a probability of 0.5
+        transforms.RandomApply([transforms.RandomRotation(30)], p=0.3),
+        transforms.RandomApply([transforms.RandomHorizontalFlip()], p=0.3),
         transforms.RandomApply(
             [
                 transforms.ColorJitter(
@@ -74,10 +75,9 @@ transform = transforms.Compose(
                 )
             ],
             p=0.3,
-        ),  # Apply color jitter with a probability of 0.5
-        transforms.Resize((224, 224)),  # Randomly crop the image to 224x224 pixels
-        transforms.ToTensor(),  # Convert the image to a tensor
-        # Normalize the image with mean and std of ImageNet
+        ),
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
     ]
 )
 
@@ -111,8 +111,8 @@ def dataloader(
     val_dataloader = DataLoader(
         val_dataset,
         batch_size=batch_size,
-        shuffle=True,
-        collate_fn=train_dataset.collate_fn,
+        shuffle=False,
+        collate_fn=val_dataset.collate_fn,
         num_workers=no_workers,
         pin_memory=True,
     )
@@ -120,10 +120,17 @@ def dataloader(
     return train_dataloader, val_dataloader
 
 
+# Initialize the tokenizer
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+# Assuming df_caption is your dataframe with 'image_path' and 'text' columns
 cap_train_dl, cap_val_dl = dataloader(
-    df_caption, CaptionDataset, batch_size, transform, transform
+    df_caption, CaptionDataset, batch_size, transform, transform, tokenizer=tokenizer
 )
 
 if __name__ == "__main__":
-    print(cap_train_dl)
-    print(len(cap_train_dl))
+    for images, captions in cap_train_dl:
+        print(images.shape)
+        print(captions.shape)
+        print(captions)
+        break

@@ -4,6 +4,26 @@ import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 print(parent_dir)
 sys.path.insert(0, parent_dir)
+
+import torch
+import random
+import numpy as np
+
+
+# Set random seeds
+def set_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    np.random.seed(seed)  # Numpy module.
+    random.seed(seed)  # Python random module.
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
+
+seed = 42
+set_seed(seed)
+
 import torch
 import numpy as np
 from const import *
@@ -126,6 +146,8 @@ def train(
     val_losses = []
     train_bleus = []
     val_bleus = []
+    # scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=1e-5, max_lr=1e-3, step_size_up=2000, mode='triangular')
+
     if load_model:
         checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint["model_state_dict"])
@@ -144,6 +166,7 @@ def train(
         val_losses.append(val_loss)
         train_bleus.append(train_bleu)
         val_bleus.append(val_bleu)
+        # scheduler.step(val_loss)
         print(
             f"Epoch: {epoch+1} | Train Loss: {train_loss:7.3f} | Train PPL: {np.exp(train_loss):7.3f} | Train Acc: {train_bleu:.2f} "
             f"| Val Loss: {val_loss:7.3f} | Val PPL: {np.exp(val_loss):7.3f} | Val Acc: {val_bleu:.2f}"
