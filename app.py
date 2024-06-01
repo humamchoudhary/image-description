@@ -23,7 +23,7 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-checkpoint_path = "./best_model.pth"
+checkpoint_path = "./model-v10-2.pth"
 # Load the checkpoint
 checkpoint = torch.load(checkpoint_path)
 

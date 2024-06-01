@@ -7,9 +7,11 @@ print(parent_dir)
 sys.path.insert(0, parent_dir)
 import torch.nn as nn
 import torch.optim as optim
-from efficientnet_pytorch import EfficientNet
+
+# from efficientnet_pytorch import EfficientNet
 from transformers import BertModel
-from models.v10.dataloader import tokenizer
+from dataloader import tokenizer
+from torchvision import models
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -18,19 +20,19 @@ class ImageCaptioningModel(nn.Module):
 
     def __init__(
         self,
-        image_model_name="efficientnet-b0",
+        image_model_name="resnet50",  # Changed to ResNet50
         bert_model_name="bert-base-uncased",
-        embed_size=256,
-        hidden_size=512,
+        embed_size=256,  # Increased embedding size
+        hidden_size=1024,  # Increased hidden size
         vocab_size=30522,
-        num_layers=2,  # Increase number of layers
-        dropout=0.3,  # Add dropout
+        num_layers=3,  # Increased number of layers
+        dropout=0.3,  # Increased dropout
     ):
         super(ImageCaptioningModel, self).__init__()
 
-        # Load pre-trained EfficientNet
-        self.image_model = EfficientNet.from_pretrained(image_model_name)
-        self.image_model._fc = nn.Linear(self.image_model._fc.in_features, embed_size)
+        # Load pre-trained ResNet50
+        self.image_model = models.resnet18(weights=models.ResNet18_Weights)
+        self.image_model.fc = nn.Linear(self.image_model.fc.in_features, embed_size)
 
         # Load pre-trained BERT
         self.bert_model = BertModel.from_pretrained(bert_model_name)
@@ -42,9 +44,14 @@ class ImageCaptioningModel(nn.Module):
 
         # Define LSTM for generating captions
         self.lstm = nn.LSTM(
-            embed_size, hidden_size, num_layers, batch_first=True, dropout=dropout
+            embed_size,
+            hidden_size,
+            num_layers,
+            batch_first=True,
+            dropout=dropout,
+            bidirectional=True,
         )
-        self.linear = nn.Linear(hidden_size, vocab_size)
+        self.linear = nn.Linear(hidden_size * 2, vocab_size)  # Adjust for bidirectional
 
     def forward(self, images, captions):
         # Extract features from images

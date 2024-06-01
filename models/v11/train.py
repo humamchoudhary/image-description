@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 
 from const import *
 from hyperparm import *
-from v10 import model, optimizer, criterion
+from v11 import model, optimizer, criterion
 from dataloader import cap_train_dl, cap_val_dl
 
 
@@ -184,7 +184,7 @@ def train(
         plt.title("Training and Validation Loss")
         plt.legend()
         plt.show()
-        plt.savefig("model-v10-2-t-v-loss.png")
+        plt.savefig("model-v11-1-t-v-loss.png")
 
         plt.figure(figsize=(10, 6))
         plt.plot(train_accs, label="Train Accuracy")
@@ -194,14 +194,14 @@ def train(
         plt.title("Training and Validation Accuracy")
         plt.legend()
         plt.show()
-        plt.savefig("model-v10-2-t-v-accu.png")
+        plt.savefig("model-v11-1-t-v-accu.png")
         if epochs_no_improve == patience:
             print("Early stopping")
             break
 
-    save_model(model, optimizer, "./model-v10-2-final.pth")
+    save_model(model, optimizer, "./model-v11-1-final.pth")
 
 
 # Main function
 if __name__ == "__main__":
-    train(model, cap_train_dl, cap_val_dl, optimizer, criterion, "./model-v10-2.pth")
+    train(model, cap_train_dl, cap_val_dl, optimizer, criterion, "./model-v11-1.pth")
