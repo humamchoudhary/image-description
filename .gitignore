@@ -4,6 +4,8 @@
 *.jpeg
 *.pth
 *.ipynb
+*.pyc
 .env/*
 dataset
 /__pycache__
+__pycache__/*
