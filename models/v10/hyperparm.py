@@ -6,7 +6,8 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 print(parent_dir)
 sys.path.insert(0, parent_dir)
 
-from models.v10.const import *
+from const import *
+# from models.v10.const import *
 
 n_epochs = 60
 batch_size = 16

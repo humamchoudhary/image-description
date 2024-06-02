@@ -9,7 +9,8 @@ import torch.nn as nn
 import torch.optim as optim
 from efficientnet_pytorch import EfficientNet
 from transformers import BertModel
-from models.v10.dataloader import tokenizer
+from dataloader import tokenizer
+# from models.v10.dataloader import tokenizer
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
