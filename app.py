@@ -132,7 +132,7 @@ def load_image(image_path):
     return image.to(device)
 
 
-def dummy_prediction_function(image_path):
+def prediction(image_path):
     image = load_image(image_path)
     predicted_tokens = generate_caption(image)
     # predicted_caption = tokens_to_sentence(predicted_tokens)
@@ -152,7 +152,7 @@ def index():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(filepath)
-            prediction = dummy_prediction_function(filepath)
+            prediction = prediction(filepath)
             image_url = url_for("uploaded_file", filename=filename)
             return render_template(
                 "result.html", image_url=image_url, prediction=prediction

@@ -9,8 +9,10 @@ import torch.nn as nn
 import torch.optim as optim
 
 from transformers import DistilBertModel
-from models.v11.dataloader import tokenizer
-# from dataloader import tokenizer
+
+# from models.v11.dataloader import tokenizer
+
+from dataloader import tokenizer
 from torchvision import models
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,8 +26,8 @@ class ImageCaptioningModel(nn.Module):
         embed_size=128,  # Reduced embedding size
         hidden_size=512,  # Reduced hidden size
         vocab_size=30522,
-        num_layers=1,  # Reduced number of layers
-        dropout=0.1,  # Reduced dropout
+        num_layers=2,  # Reduced number of layers
+        dropout=0.3,  # Reduced dropout
     ):
         super(ImageCaptioningModel, self).__init__()
 
@@ -82,7 +84,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
 criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
-optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-5)
+optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
 if __name__ == "__main__":
     print(model)

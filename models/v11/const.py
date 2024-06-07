@@ -10,7 +10,7 @@ print(parent_dir)
 sys.path.insert(0, parent_dir)
 df_caption = pd.read_csv("./dataset/csv/dataset_cleaned.csv")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-df_caption = df_caption
+# df_caption = df_caption
 
 # en_nlp = spacy.load("en_core_web_md")
 
