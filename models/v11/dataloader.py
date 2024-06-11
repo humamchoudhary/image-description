@@ -131,6 +131,8 @@ cap_train_dl, cap_val_dl = dataloader(
 )
 
 if __name__ == "__main__":
+    input_ids = torch.tensor([tokenizer.cls_token_id], device=device).unsqueeze(0)
+    print(input_ids)
     for images, captions in cap_train_dl:
         print(images.shape)
         print(captions.shape)

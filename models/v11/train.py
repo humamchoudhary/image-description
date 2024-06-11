@@ -240,7 +240,7 @@ def train(
         plt.title("Training and Validation Loss")
         plt.legend()
         plt.show()
-        plt.savefig("model-v11-3-t-v-loss.png")
+        plt.savefig("model-v11-4-t-v-loss.png")
 
         plt.figure(figsize=(10, 6))
         plt.plot(train_rouge_scores["rouge1"], label="Train ROUGE-1")
@@ -254,15 +254,15 @@ def train(
         plt.title("Training and Validation ROUGE Scores")
         plt.legend()
         plt.show()
-        plt.savefig("model-v11-3-t-v-rouge.png")
+        plt.savefig("model-v11-4-t-v-rouge.png")
 
         if epochs_no_improve == patience:
             print("Early stopping")
             break
 
-    save_model(model, optimizer, "./model-v11-3-final.pth")
+    save_model(model, optimizer, "./model-v11-4-final.pth")
 
 
 # Main function
 if __name__ == "__main__":
-    train(model, cap_train_dl, cap_val_dl, optimizer, criterion, "./model-v11-2.pth")
+    train(model, cap_train_dl, cap_val_dl, optimizer, criterion, "./model-v11-4.pth")

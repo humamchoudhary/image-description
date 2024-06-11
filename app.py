@@ -10,11 +10,12 @@ from werkzeug.utils import secure_filename
 import os
 import numpy as np
 
-# from models.model import model, vocab, device, sos_token, eos_token
+# from models.v10 import model, vocab, device, sos_token, eos_token
 import torch
-from models.v11.const import *
-from models.v11.hyperparm import *
-from models.v11.v11 import model
+
+from models.v10.const import *
+from models.v10.hyperparm import *
+from models.v10.v10 import model
 from transformers import BertTokenizer
 
 print(device)
@@ -23,7 +24,7 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-checkpoint_path = "./model-v11-2.pth"
+checkpoint_path = "./model-v10-3.pth"
 # Load the checkpoint
 checkpoint = torch.load(checkpoint_path)
 
@@ -92,6 +93,8 @@ def generate_caption(image, max_length=30):
     # Start with the [CLS] token (BERT's start token)
     input_ids = torch.tensor([tokenizer.cls_token_id], device=device).unsqueeze(0)
     print(input_ids)
+    # raise KeyboardInterrupt
+    print(input_ids)
     for _ in range(max_length):
         # Get the model output
         with torch.no_grad():
@@ -152,10 +155,10 @@ def index():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(filepath)
-            prediction = prediction(filepath)
+            prediction_out = prediction(filepath)
             image_url = url_for("uploaded_file", filename=filename)
             return render_template(
-                "result.html", image_url=image_url, prediction=prediction
+                "result.html", image_url=image_url, prediction=prediction_out
             )
     return render_template("index.html")
 

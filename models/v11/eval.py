@@ -1,5 +1,9 @@
 import os
 import sys
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+print(parent_dir)
+sys.path.insert(0, parent_dir)
 import torch
 import pandas as pd
 import numpy as np
@@ -58,6 +62,18 @@ def generate_predictions(model, test_loader, device, max_length=100):
 
             predictions.extend(generated_sequences)
             references.extend(trg.cpu().numpy())
+
+            bleu_score = calculate_bleu(generated_sequences, trg.cpu().numpy())
+            print(f"BLEU Score: {bleu_score:.4f}")
+
+            # Calculate ROUGE score
+            rouge_scores = calculate_rouge(generated_sequences, trg.cpu().numpy())
+            avg_rouge1 = np.mean([score["rouge1"].fmeasure for score in rouge_scores])
+            avg_rouge2 = np.mean([score["rouge2"].fmeasure for score in rouge_scores])
+            avg_rougeL = np.mean([score["rougeL"].fmeasure for score in rouge_scores])
+            print(f"ROUGE-1 Score: {avg_rouge1:.4f}")
+            print(f"ROUGE-2 Score: {avg_rouge2:.4f}")
+            print(f"ROUGE-L Score: {avg_rougeL:.4f}")
 
     return predictions, references
 

@@ -9,7 +9,9 @@ import torch.nn as nn
 import torch.optim as optim
 from efficientnet_pytorch import EfficientNet
 from transformers import BertModel
+
 from dataloader import tokenizer
+
 # from models.v10.dataloader import tokenizer
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,8 +26,8 @@ class ImageCaptioningModel(nn.Module):
         embed_size=256,
         hidden_size=512,
         vocab_size=30522,
-        num_layers=2,  # Increase number of layers
-        dropout=0.3,  # Add dropout
+        num_layers=1,  # Increase number of layers
+        dropout=0.35,  # Add dropout
     ):
         super(ImageCaptioningModel, self).__init__()
 

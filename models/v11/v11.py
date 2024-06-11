@@ -13,6 +13,7 @@ from transformers import DistilBertModel
 # from models.v11.dataloader import tokenizer
 
 from dataloader import tokenizer
+
 from torchvision import models
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -23,11 +24,11 @@ class ImageCaptioningModel(nn.Module):
     def __init__(
         self,
         bert_model_name="distilbert-base-uncased",
-        embed_size=128,  # Reduced embedding size
-        hidden_size=512,  # Reduced hidden size
+        embed_size=128,
+        hidden_size=512,
         vocab_size=30522,
-        num_layers=2,  # Reduced number of layers
-        dropout=0.3,  # Reduced dropout
+        num_layers=1,
+        dropout=0.35,  # Reduced dropout
     ):
         super(ImageCaptioningModel, self).__init__()
 
